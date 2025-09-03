@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Market Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f0f2f5;
+    }
+    .dashboard {
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+    header {
+      background-color: #333;
+      color: white;
+      padding: 15px 0;
+      text-align: center;
+    }
+    main {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      gap: 20px;
+    }
+    .watchlist, .stock-details {
+      background: white;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.13);
+      width: 46%;
+      border-radius: 10px;
+    }
+    .search-section {
+      margin-top: 20px;
+      background: white;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.13);
+      border-radius: 10px;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    #search {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    #stock-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    #stock-table th, #stock-table td {
+      border: 1px solid #eee;
+      padding: 10px;
+      text-align: left;
+    }
+    #stock-table th {
+      background: #f4f4f4;
+    }
+    #stock-table tr:hover {
+      background: #f8f9fa;
+    }
+    .positive {
+      color: green;
+    }
+    .negative {
+      color: red;
+    }
+    .actions button {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    .add {
+      background: green;
+      color: white;
+    }
+    .remove {
+      background: red;
+      color: white;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      position: relative;
+      cursor: pointer;
+    }
+    li:hover {
+      background: #f8f9fa;
+    }
+    li button {
+      display: none;
+      position: absolute;
+      right: 10px;
+      top: 10px;
+    }
+    li:hover button {
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <header>
+      <h1>Stock Market Dashboard</h1>
+    </header>
+    <main>
+      <div class="watchlist">
+        <h2>Watchlist</h2>
+        <ul id="watchlist">
+        </ul>
+      </div>
+      <div class="stock-details">
+        <h2>Stock Details</h2>
+        <div id="stock-info">
+          <em>Select a stock from the table to see details here.</em>
+        </div>
+      </div>
+    </main>
+    <section class="search-section">
+      <input type="text" id="search" placeholder="Search for stocks...">
+      <table id="stock-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Symbol</th>
+            <th>Price</th>
+            <th>Change</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>
+    // Mock stock data
+    const stocks = [
+      { name: "Apple Inc.", symbol: "AAPL", price: 178.89, change: +1.35 },
+      { name: "Microsoft Corp.", symbol: "MSFT", price: 330.12, change: -2.16 },
+      { name: "Alphabet Inc.", symbol: "GOOGL", price: 2700.75, change: +4.87 },
+      { name: "Amazon.com Inc.", symbol: "AMZN", price: 174.65, change: +0.74 },
+      { name: "Tesla Inc.", symbol: "TSLA", price: 750.47, change: -14.45 }
+    ];
+    let watchlist = [];
+    let filteredStocks = [...stocks];
+
+    function renderStockTable() {
+      const tbody = document.querySelector("#stock-table tbody");
+      tbody.innerHTML = "";
+      filteredStocks.forEach(stock => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${stock.name}</td>
+          <td>${stock.symbol}</td>
+          <td>$${stock.price.toFixed(2)}</td>
+          <td class="${stock.change >= 0 ? 'positive' : 'negative'}">${stock.change >= 0 ? "+" : ""}${stock.change}</td>
+          <td class="actions">
+            <button class="add" onclick="addToWatchlist('${stock.symbol}')">Add</button>
+          </td>
+        `;
+        tr.onclick = () => showStockDetails(stock.symbol);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderWatchlist() {
+      const ul = document.getElementById("watchlist");
+      ul.innerHTML = "";
+      if (watchlist.length === 0) {
+        ul.innerHTML = "<li><em>No stocks in watchlist</em></li>";
+      }
+      watchlist.forEach(symbol => {
+        const stock = stocks.find(s => s.symbol === symbol);
+        if (stock) {
+          const li = document.createElement('li');
+          li.textContent = `${stock.name} (${stock.symbol})`;
+          const btn = document.createElement('button');
+          btn.className = "remove";
+          btn.textContent = "Remove";
+          btn.onclick = (e) => { e.stopPropagation(); removeFromWatchlist(symbol); };
+          li.appendChild(btn);
+          li.onclick = () => showStockDetails(symbol);
+          ul.appendChild(li);
+        }
+      });
+    }
+
+    function showStockDetails(symbol) {
+      const stock = stocks.find(s => s.symbol === symbol);
+      const detailsDiv = document.getElementById("stock-info");
+      if (!stock) {
+        detailsDiv.innerHTML = "<em>Stock details
